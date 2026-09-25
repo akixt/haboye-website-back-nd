@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Login — Haboye General Trading PLC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --charcoal:#1B1E1F;
+    --charcoal-2:#24282B;
+    --safety:#F2A900;
+    --paper:#F4F2ED;
+    --ink:#16181A;
+    --line: rgba(244,242,237,0.14);
+    --radius: 2px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    font-family:'Inter', sans-serif;
+    background:var(--charcoal);
+    color:var(--paper);
+    min-height:100vh;
+    display:flex; align-items:center; justify-content:center;
+    padding:20px;
+  }
+  .card{
+    width:100%; max-width:380px;
+    background:var(--charcoal-2);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:36px 32px;
+  }
+  h1{
+    font-family:'Oswald', sans-serif;
+    font-size:20px;
+    letter-spacing:0.02em;
+    margin-bottom:6px;
+  }
+  p.sub{ color:#B9BDBF; font-size:13.5px; margin-bottom:28px; }
+  label{ display:block; font-size:13px; margin-bottom:6px; color:#B9BDBF; }
+  input{
+    width:100%;
+    padding:12px 14px;
+    margin-bottom:18px;
+    background:var(--charcoal);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    color:var(--paper);
+    font-size:15px;
+  }
+  input:focus{ outline:2px solid var(--safety); border-color:var(--safety); }
+  button{
+    width:100%;
+    padding:13px;
+    background:var(--safety);
+    color:var(--ink);
+    border:none;
+    border-radius:var(--radius);
+    font-weight:700;
+    font-size:15px;
+    cursor:pointer;
+    letter-spacing:0.02em;
+  }
+  button:hover{ filter:brightness(1.08); }
+  button:disabled{ opacity:0.6; cursor:default; }
+  #err{
+    color:#ff9d8a; font-size:13.5px; margin-bottom:14px; min-height:1em;
+  }
+  a.back{
+    display:block; text-align:center; margin-top:20px;
+    color:#B9BDBF; font-size:13px; text-decoration:none;
+  }
+  a.back:hover{ color:var(--safety); }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>ADMIN LOGIN</h1>
+  <p class="sub">Haboye General Trading PLC — Odeeffannoo galmee moosaajii (website admin)</p>
+
+  <form id="loginForm">
+    <label for="username">Maqaa fayyadamaa (Username)</label>
+    <input id="username" name="username" type="text" autocomplete="username" required>
+
+    <label for="password">Jecha darbii (Password)</label>
+    <input id="password" name="password" type="password" autocomplete="current-password" required>
+
+    <div id="err"></div>
+
+    <button type="submit" id="submitBtn">SEENI (LOG IN)</button>
+  </form>
+
+  <a class="back" href="/index.html">&larr; Gara Website-tti deebi'i</a>
+</div>
+
+<script>
+const form = document.getElementById('loginForm');
+const errBox = document.getElementById('err');
+const btn = document.getElementById('submitBtn');
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  errBox.textContent = '';
+  btn.disabled = true;
+  btn.textContent = 'SEENAA JIRA...';
+
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      errBox.textContent = data.error || 'Dogoggora seensaa (login error)';
+      btn.disabled = false;
+      btn.textContent = 'SEENI (LOG IN)';
+      return;
+    }
+
+    window.location.href = '/admin/dashboard.html';
+  } catch (err) {
+    errBox.textContent = 'Interneetii wajjin qunnamtii dhabame (network error)';
+    btn.disabled = false;
+    btn.textContent = 'SEENI (LOG IN)';
+  }
+});
+</script>
+
+</body>
+</html>

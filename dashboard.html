@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard — Haboye General Trading PLC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --charcoal:#1B1E1F;
+    --charcoal-2:#24282B;
+    --charcoal-3:#2E3336;
+    --safety:#F2A900;
+    --rust:#A63A24;
+    --paper:#F4F2ED;
+    --steel-light:#B9BDBF;
+    --ink:#16181A;
+    --line: rgba(244,242,237,0.14);
+    --radius: 2px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    font-family:'Inter', sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    min-height:100vh;
+  }
+  header{
+    background:var(--charcoal);
+    color:var(--paper);
+    padding:18px 26px;
+    display:flex; align-items:center; justify-content:space-between;
+    flex-wrap:wrap; gap:12px;
+  }
+  header h1{
+    font-family:'Oswald', sans-serif;
+    font-size:17px;
+    letter-spacing:0.02em;
+  }
+  header h1 span{ color:var(--safety); }
+  #who{ font-size:13px; color:var(--steel-light); margin-right:14px; }
+  #logoutBtn{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--paper);
+    padding:8px 16px;
+    border-radius:var(--radius);
+    cursor:pointer;
+    font-size:13px;
+  }
+  #logoutBtn:hover{ border-color:var(--safety); color:var(--safety); }
+
+  main{
+    max-width:960px;
+    margin:0 auto;
+    padding:30px 20px 60px;
+  }
+
+  .panel{
+    background:#fff;
+    border:1px solid rgba(0,0,0,0.08);
+    border-radius:var(--radius);
+    padding:24px;
+    margin-bottom:28px;
+  }
+  .panel h2{
+    font-family:'Oswald', sans-serif;
+    font-size:15px;
+    letter-spacing:0.03em;
+    text-transform:uppercase;
+    margin-bottom:16px;
+    color:var(--charcoal);
+  }
+  label{ display:block; font-size:13px; margin-bottom:6px; color:#555; }
+  input[type=text], textarea{
+    width:100%;
+    padding:11px 12px;
+    margin-bottom:16px;
+    border:1px solid rgba(0,0,0,0.15);
+    border-radius:var(--radius);
+    font-size:14.5px;
+    font-family:inherit;
+  }
+  textarea{ min-height:110px; resize:vertical; }
+  .row-check{ display:flex; align-items:center; gap:8px; margin-bottom:18px; }
+  .row-check input{ width:auto; margin:0; }
+
+  button.primary{
+    background:var(--safety);
+    color:var(--ink);
+    border:none;
+    padding:11px 22px;
+    border-radius:var(--radius);
+    font-weight:700;
+    cursor:pointer;
+    font-size:14px;
+  }
+  button.primary:hover{ filter:brightness(1.06); }
+  button.secondary{
+    background:transparent;
+    border:1px solid rgba(0,0,0,0.2);
+    padding:11px 18px;
+    border-radius:var(--radius);
+    cursor:pointer;
+    font-size:14px;
+    margin-left:10px;
+  }
+
+  #formMsg{ font-size:13.5px; margin-bottom:12px; min-height:1em; }
+  #formMsg.ok{ color:#2b7a3d; }
+  #formMsg.err{ color:var(--rust); }
+
+  .news-item{
+    border-bottom:1px solid rgba(0,0,0,0.08);
+    padding:16px 0;
+    display:flex; justify-content:space-between; gap:16px;
+    align-items:flex-start;
+  }
+  .news-item:last-child{ border-bottom:none; }
+  .news-item .meta{ flex:1; }
+  .news-item h3{ font-size:15.5px; margin-bottom:4px; }
+  .news-item .date{ font-size:12px; color:#888; }
+  .news-item .snippet{ font-size:13.5px; color:#444; margin-top:6px; }
+  .status{
+    display:inline-block; font-size:11px; padding:2px 8px; border-radius:10px;
+    margin-left:8px; vertical-align:middle;
+  }
+  .status.pub{ background:#e3f5e6; color:#2b7a3d; }
+  .status.draft{ background:#f1e6d0; color:#8a6110; }
+  .news-actions{ display:flex; gap:8px; flex-shrink:0; }
+  .news-actions button{
+    background:transparent; border:1px solid rgba(0,0,0,0.15);
+    padding:6px 12px; border-radius:var(--radius); cursor:pointer; font-size:12.5px;
+  }
+  .news-actions button.del:hover{ border-color:var(--rust); color:var(--rust); }
+  .news-actions button.edit:hover{ border-color:var(--safety); color:#8a6110; }
+
+  #loading, #empty{ color:#888; font-size:14px; padding:10px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>HABOYE <span>ADMIN</span></h1>
+  <div>
+    <span id="who"></span>
+    <button id="logoutBtn">Ba'i (Logout)</button>
+  </div>
+</header>
+
+<main>
+
+  <div class="panel">
+    <h2 id="formTitle">Oduu Haaraa Ida'i (Add News)</h2>
+    <form id="newsForm">
+      <input type="hidden" id="newsId" value="">
+
+      <label for="title">Mata Duree (Title)</label>
+      <input type="text" id="title" required>
+
+      <label for="body">Ergaa (Body)</label>
+      <textarea id="body" required></textarea>
+
+      <label for="imageUrl">Suuraa URL (Image URL — optional)</label>
+      <input type="text" id="imageUrl" placeholder="https://...">
+
+      <div class="row-check">
+        <input type="checkbox" id="published" checked>
+        <label for="published" style="margin:0;">Website irratti mul'ata (Published)</label>
+      </div>
+
+      <div id="formMsg"></div>
+
+      <button type="submit" class="primary" id="saveBtn">OLKAA'I (SAVE)</button>
+      <button type="button" class="secondary" id="cancelEditBtn" style="display:none;">Haqi (Cancel)</button>
+    </form>
+  </div>
+
+  <div class="panel">
+    <h2>Oduu Jiran (Existing News)</h2>
+    <div id="loading">Fe'aa jira... (loading)</div>
+    <div id="empty" style="display:none;">Oduun hin galmoofne (no news yet).</div>
+    <div id="newsList"></div>
+  </div>
+
+</main>
+
+<script>
+const formEl = document.getElementById('newsForm');
+const formMsg = document.getElementById('formMsg');
+const newsList = document.getElementById('newsList');
+const loadingEl = document.getElementById('loading');
+const emptyEl = document.getElementById('empty');
+const formTitle = document.getElementById('formTitle');
+const cancelBtn = document.getElementById('cancelEditBtn');
+
+function setMsg(text, kind) {
+  formMsg.textContent = text || '';
+  formMsg.className = kind || '';
+}
+
+async function checkAuth() {
+  try {
+    const res = await fetch('/api/auth/me');
+    if (!res.ok) throw new Error('not authed');
+    const data = await res.json();
+    document.getElementById('who').textContent = data.username;
+  } catch (e) {
+    window.location.href = '/admin/login.html';
+  }
+}
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await fetch('/api/auth/logout', { method: 'POST' });
+  window.location.href = '/admin/login.html';
+});
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+async function loadNews() {
+  loadingEl.style.display = 'block';
+  emptyEl.style.display = 'none';
+  newsList.innerHTML = '';
+
+  try {
+    const res = await fetch('/api/news/admin/all');
+    if (res.status === 401) {
+      window.location.href = '/admin/login.html';
+      return;
+    }
+    const items = await res.json();
+    loadingEl.style.display = 'none';
+
+    if (!items.length) {
+      emptyEl.style.display = 'block';
+      return;
+    }
+
+    items.forEach((item) => {
+      const div = document.createElement('div');
+      div.className = 'news-item';
+      const d = new Date(item.date);
+      div.innerHTML = `
+        <div class="meta">
+          <h3>${escapeHtml(item.title)}
+            <span class="status ${item.published ? 'pub' : 'draft'}">${item.published ? 'PUBLISHED' : 'DRAFT'}</span>
+          </h3>
+          <div class="date">${d.toLocaleDateString()} ${d.toLocaleTimeString()}</div>
+          <div class="snippet">${escapeHtml(item.body).slice(0, 140)}${item.body.length > 140 ? '…' : ''}</div>
+        </div>
+        <div class="news-actions">
+          <button class="edit" data-id="${item.id}">Gulaali (Edit)</button>
+          <button class="del" data-id="${item.id}">Haqi (Delete)</button>
+        </div>
+      `;
+      newsList.appendChild(div);
+
+      div.querySelector('.edit').addEventListener('click', () => startEdit(item));
+      div.querySelector('.del').addEventListener('click', () => deleteNews(item.id));
+    });
+  } catch (e) {
+    loadingEl.textContent = 'Dogoggora fe\'uu (failed to load)';
+  }
+}
+
+function startEdit(item) {
+  document.getElementById('newsId').value = item.id;
+  document.getElementById('title').value = item.title;
+  document.getElementById('body').value = item.body;
+  document.getElementById('imageUrl').value = item.imageUrl || '';
+  document.getElementById('published').checked = !!item.published;
+  formTitle.textContent = 'Oduu Gulaali (Edit News)';
+  cancelBtn.style.display = 'inline-block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function resetForm() {
+  document.getElementById('newsId').value = '';
+  formEl.reset();
+  document.getElementById('published').checked = true;
+  formTitle.textContent = 'Oduu Haaraa Ida\'i (Add News)';
+  cancelBtn.style.display = 'none';
+}
+
+cancelBtn.addEventListener('click', resetForm);
+
+async function deleteNews(id) {
+  if (!confirm('Oduu kana haquu barbaaddaa? (Delete this news item?)')) return;
+  try {
+    const res = await fetch('/api/news/' + id, { method: 'DELETE' });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || 'Dogoggora (error)');
+      return;
+    }
+    loadNews();
+  } catch (e) {
+    alert('Interneetii wajjin qunnamtii dhabame (network error)');
+  }
+}
+
+formEl.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  setMsg('', '');
+
+  const id = document.getElementById('newsId').value;
+  const payload = {
+    title: document.getElementById('title').value.trim(),
+    body: document.getElementById('body').value.trim(),
+    imageUrl: document.getElementById('imageUrl').value.trim(),
+    published: document.getElementById('published').checked
+  };
+
+  if (!payload.title || !payload.body) {
+    setMsg('Mata duree fi ergaa barbaachisa (title and body required)', 'err');
+    return;
+  }
+
+  const saveBtn = document.getElementById('saveBtn');
+  saveBtn.disabled = true;
+
+  try {
+    const res = await fetch(id ? '/api/news/' + id : '/api/news', {
+      method: id ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      setMsg(data.error || 'Dogoggora (error)', 'err');
+    } else {
+      setMsg('Milkaa\'eera! (Saved!)', 'ok');
+      resetForm();
+      loadNews();
+    }
+  } catch (err) {
+    setMsg('Interneetii wajjin qunnamtii dhabame (network error)', 'err');
+  } finally {
+    saveBtn.disabled = false;
+  }
+});
+
+checkAuth().then(loadNews);
+</script>
+
+</body>
+</html>
